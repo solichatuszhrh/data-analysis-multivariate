@@ -1,0 +1,223 @@
+---
+title: "Assignment 2"
+author: "Solichatus Zahroh"
+date: "2022-10-22"
+output:
+  word_document: default
+  latex_engine: xelatex
+  pdf_document: null
+---
+
+
+## PART I: Programming your own t-test function
+
+1. Create the t-test function
+```{r include=TRUE}
+MyTtest <- function(x1,x2){
+  diff.mean <- mean(x1)-mean(x2) #calculate the mean difference
+  n1 <- length(x1) #number of dataset of the 1st group
+  n2 <- length(x2) #number of dataset of the 2nd group
+  s1 <- (n1-1)*(sd(x1))^2 #calculate std deviation of the 1st group
+  s2 <- (n2-1)*(sd(x2))^2 #calculate std deviation of the 2nd group
+  s <- sqrt((s1+s2)/(n1+n2-2)) #calculate estimate std deviation
+  t <-diff.mean/(s*sqrt(1/n1+1/n2)) #produce statistic value (t)
+  return(t)
+}
+
+```
+Here, the function that has output of statistic value of T-student is defined and can be used to show the differences between group means.
+
+
+2. Test your function with data and compare with built-in t-test function
+```{r include=TRUE}
+CSFI <- c(2,5,5,6,6,7,8,9) #the first group
+TFI <- c(1,1,2,3,3,4,5,7,7,8) #the second group
+t <- t.test(CSFI,TFI,var.equal = T)$statistic #t value output from the built-in function
+t.func <- MyTtest(CSFI,TFI) #t-value output from my function
+a <- list(t.built=t,t.func=t.func)
+names(a) <- c("t.built-in","t.function")
+a
+#the function produce the same value with the built-in function
+```
+The result of the built-in function is 1.680507 which has the same result with my function.
+
+
+3. Calculate p-value (two sided test) of the t-test and compare with built-in function
+```{r include=TRUE}
+MyTtest <- function(x1,x2){
+  diff.mean <- mean(x1)-mean(x2) #calculate the mean difference
+  n1 <- length(x1) #number of dataset of the 1st group
+  n2 <- length(x2) #number of dataset of the 2nd group
+  s1 <- (n1-1)*(sd(x1))^2 #calculate std deviation of the 1st group
+  s2 <- (n2-1)*(sd(x2))^2 #calculate std deviation of the 2nd group
+  s <- sqrt((s1+s2)/(n1+n2-2)) #calculate estimate std deviation
+  t <- diff.mean/(s*sqrt(1/n1+1/n2)) #produce statistic value (t)
+  p.value <- 2*pt(t,n1+n2-2,lower.tail = F) 
+  result <- list(t,p.value)
+  names(result) <- c("t-statistic","two-sided p-value")
+  return(result)
+}
+MyTtest(CSFI,TFI)
+
+built.func <- t.test(CSFI,TFI,var.equal = T)
+func <- list(built.func$statistic,built.func$p.value)
+names(func) <- c("t-statistic","two-sided p-value")
+func
+```
+The two-sided p-value of the built-in function is 0.1122736 and the result of my function is also 0.1122736. Both results are the same for the t-statistic and two-sided p-value.
+
+4. Organize the output in the form of a list
+```{r include=TRUE}
+```
+
+
+```{r include=TRUE}
+```
+
+
+```{r include=TRUE}
+```
+
+
+```{r include=TRUE}
+MyTtest <- function(x1,x2){
+  diff.mean <- mean(x1)-mean(x2) #calculate the mean difference
+  n1 <- length(x1) #number of dataset of the 1st group
+  n2 <- length(x2) #number of dataset of the 2nd group
+  s1 <- (n1-1)*(sd(x1))^2 #calculate std deviation of the 1st group
+  s2 <- (n2-1)*(sd(x2))^2 #calculate std deviation of the 2nd group
+  s <- sqrt((s1+s2)/(n1+n2-2)) #calculate estimate std deviation
+  t <-diff.mean/(s*sqrt(1/n1+1/n2)) #produce statistic value (t)
+  p.value <- 2*pt(abs(t),n1+n2-2,lower.tail = F) 
+  result <- list(t,p.value)
+  names(result) <- c("t-statistic","two-sided p-value")
+  return(result)
+}
+MyTtest(CSFI,TFI)
+MyTtest(TFI,CSFI)
+```
+Here is the list of the function, consists of statistics of T-student and the two-sided p-value.
+
+
+## PART 2: Multiple regression analysis and matrix algebra
+The data for this exercise are about the number of species of tortoise on the various Galapagos Islands. There are 30 cases (islands) and 7 variables in the dataset. The variables are:
+• Species: the number of species of tortoise found on the island
+• Endemics: the number of endemic species on the island
+• Area: the area of the island (km2)
+• Elevation: the highest elevation of the island (m)
+• Nearest: the distance from the nearest island (km)
+• Scruz: the distance from Santa Cruz island (km)
+• Adjacent: the area of the adjacent island (km2)
+
+Species is the dependent variable and only the variables Area,Elevation,Endemics are used as predictors.
+
+1. Use the in-built R-function for linear regression and the summary() function to obtain the output for a multiple linear regression analysis on the variables described. Obtain predicted values and residuals using the extractor functions. Make a plot of the predicted values against the residuals. Give an interpretation of the results of the regression model and the plot.
+```{r include=TRUE}
+gala<- read.csv("~/Files/Utrecht!/Course First Semester/Computational inference with R/gala(2).txt", sep="")
+str(gala)
+library(tidyverse)
+gala <- gala %>%
+  select(Species,Area,Elevation,Endemics)
+summary(gala) #show descriptive statistics of the dataset
+
+model.gala <- lm(Species~Area+Elevation+Endemics,data=gala) #define model for the multiple regression analysis
+summary(model.gala) #show the coefficient, std error, t value and p-value for each variable. R-square and adj R-square can also be seen here
+
+list_model <- list(model.gala$coefficients,model.gala$fitted.values,model.gala$residuals) #store the coefficients, fitted values, and residuals as a list
+names(list_model) <- c("coefficients", "fitted values", "residuals")
+list_model ##show coefficients, fitted values, and residuals using built-in function
+
+var.y <- as.data.frame(model.gala$fitted.values) #change format of fitted values to dataframe
+var.x <- as.data.frame(model.gala$residuals) #change format of residuals to dataframe
+comb <- as.data.frame(cbind(var.x,var.y)) #combine both values
+colnames(comb) <- c("residuals", "fitted") #rename the columns
+ggplot(comb, aes(x=fitted,y=residuals)) + geom_point() + geom_smooth(method = "lm") #generate plot of fitted values against residuals
+```
+Multiple regression can be done using lm function. The result consists of the coefficients, standard error, t value, and the p-value. The fitted values or predicted values and residuals of the model also produced. The regression equation of this model is yhat = -15.89 + 0.01Area - 0.04Elevation + 4.33Endemics. However, based on alpha=5%, only endemics variable is significant then the model is yhat = -15.89 + 4.33Endemics because if the area and elevation variaables are included, the variance explained by the model is not increase at all. The plot of fitted values against residuals can be useful to determine whether some assumptions are met or not. 
+1. The linearity assumption is met because the blue line is zero (indicated by the mean residual value for every fitted value region being close to 0). The model used is lm, the line also lm function.
+2. The homoskedasticity assumption holds because the spread of residuals approximately the same across the x-axis.
+3. Outliers assumptions holds. Some extreme residuals far from the rest, however it should be inspected whether the outliers are implausible or impossible.
+
+
+2. Obtain the same estimates as in the previous step, but now with matrix algebra
+Here is the list with estimates and how to obtain them with matrix algebra:
+• the regression coefficients βˆ = (X'X)^−1(X'y)
+• the predicted values yhat = Xβ
+• the residuals e (easy to obtain once you have the predicted values).
+```{r include=TRUE}
+regres <- function(x,y){
+  x <- as.matrix(x) #create matrix of independent variables
+  y <- as.matrix(y) #create matrix of dependent variable
+  mat.a <- solve(t(x)%*%x) #calculate matrix (X'X)
+  mat.b <- t(x)%*%y #calculate matrix (X'Y)
+  beta <- mat.a%*%mat.b #calculate coefficients
+  yhat <- x%*%beta #calculate fitted values
+  resid <- y-x%*%beta #calculate residuals
+  my_list <- list(beta,yhat,resid)
+  names(my_list) <- c("coefficients", "fitted values", "residuals")
+  return(my_list)
+}
+x <- gala %>% 
+  mutate(Intercept=1) %>% #adding intercept
+  dplyr::select(Intercept,Area,Elevation,Endemics) #independent variables
+y <- gala %>% dplyr::select(Species) #dependent variable
+regres(x,y) #show coefficients, fitted values, and residuals using function
+
+```
+The result of the built-in function and my function have the same output. For the independent variables, I firstly add intercept before doing computation because the default of the built-in function has intercept. Another way, if the intercept is not included to the independent variables, the built in function should define without intercept too (lm(y~x-1) or lm(y~0+x)).
+
+
+3. Write a function that has as input a data set suitable for multiple linear regression. The function
+should perform the following:
+• obtain useful descriptive statistics of the data (you are free to choose which statistics as long as it makes sense). You can use matrix algebra here, but it is not necessary.
+• obtain the regression coefficients, predicted values and residuals using matrix algebra
+• a simple plot of the predicted values against the residuals.
+Add comments to your code and write the function as a general function that could be applied to each possible data set with varying numbers of predictors.
+```{r include=TRUE}
+regres.func <- function(x,y){
+  #descriptive statistics
+  all <-as.data.frame(cbind(x,y)) #combine independent and dependent variables
+  all[is.na(all)] = 0
+  mean.v <- sapply(all,mean) #calculate mean of each variable
+  max.v <- sapply(all, max) #calculate maximum value of each variable
+  min.v <- sapply(all, min) #calculate minimum value of each variable
+  desc <- list(mean.v,max.v,min.v) #store those values as a list
+  names(desc) <- c("mean.values", "max.values", "min,values") #rename the list
+  
+  #regression 
+  x <- as.matrix(x) #create matrix of independent variables
+  y <- as.matrix(y) #create matrix of dependent variable
+  x[is.na(x)] = 0; y[is.na(y)] = 0
+  mat.a <- solve(t(x)%*%x) #calculate matrix (X'X)
+  mat.b <- t(x)%*%y #calculate matrix (X'Y)
+  beta <- mat.a%*%mat.b #calculate coefficients
+  yhat <- x%*%beta #calculate fitted values
+  resid <- y-x%*%beta #calculate residuals
+  my_list <- list(beta,yhat,resid) #store the coefficients, fitted values, and residuals as a list
+  names(my_list) <- c("coefficients", "fitted.values", "residuals") #rename the list
+  
+  result <- list(desc,my_list) #store the descriptive statistics and the regression outputs as a list
+  names(result) <- c("descriptive statistics","regression") #rename the list
+  
+  #plot
+  comb <- as.data.frame(cbind(resid,yhat)) #combine predicted values and residuals
+  colnames(comb) <- c("residuals", "fitted") #rename the column
+  show(ggplot(comb, aes(x=fitted,y=residuals)) + geom_point() + geom_smooth(method = "lm")) #generate the plot     through ggplot
+  
+  return(result)
+}
+
+```
+This function can be applied to all multiple regression models as long as the dataset is a numerical data. If the independent variables are not numerical data, it should be converted to numerical data (dummy variables) because the multiple regression only works for numerical data only. If the dependent variables are not numerical data, another analysis should be used, namely logistic regression. If there are missing values in the dataset, then the missing values need to be removed before the analysis. Otherwise, the NA values converted to 0.
+
+
+4. Run your function on the tortoise data and show that the results are the same as you obtained in II.1.
+```{r include=TRUE}
+x <- gala %>% 
+  mutate(Intercept=1) %>% #adding intercept
+  dplyr::select(Intercept,Area,Elevation,Endemics) #independent variables
+y <- gala %>% dplyr::select(Species) #dependent variable
+regres.func(x,y) #show descriptive statistics (mean, max, min values), coefficients, fitted values, and residuals using function, along with the plot.
+
+```
+The result of this function consists of 3 descriptive statistics (mean, max, and min values), the coefficient regression, the fitted values or predicted value, and the residuals. Also, the plot from ggplot with regression line with lm function is generated. This function has the same output as the built-in function in II.1. 

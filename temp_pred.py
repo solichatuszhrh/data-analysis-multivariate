@@ -15,8 +15,8 @@ from keras.wrappers.scikit_learn
 
 ### Import Data ###
 data=pd.read_csv('C:/fix.csv', sep =';')
-dataset=data.iloc[:,2:3].values #suhu_min
-dataset=data.iloc[:,1:2].values #suhu_max
+dataset=data.iloc[:,2:3].values #min_temperature
+dataset=data.iloc[:,1:2].values #max_temperature
 dataset=dataset.astype('float32')
 dataset=np.reshape(dataset,(-1,1))
 
@@ -53,7 +53,7 @@ model=Sequential()
 model.add(LSTM(no_neuron,input_shape=(X_train.shape[1],X_train.shape[2])))
 model.add(Dropout(0,2))
 model.add(Dense(1,activation='tanh', kernel_initializer='glorot_uniform', bias_initializer='zero', use_bias=True))
-model,add(Dense(1,activation='sigmoid', kernel_initializer='glorot_uniform', bias_initializer='zero'))
+model.add(Dense(1,activation='sigmoid', kernel_initializer='glorot_uniform', bias_initializer='zero'))
 model.compile(loss='mean_squared_error',optimizer='adam')
 history = model.fit(X_train,Y_train,epochs=10,batch_size=1,validation_data=(X_test,Y_test),callbacks=[EarlyStopping(monitor='val_loss',patience=10)],verbose=1,shuffle=False)
 model.summary()
@@ -62,10 +62,10 @@ model.summary()
 train_predict=model.predict(X_train)
 test_predict=model.predict(X_test)
 #invert prediction
-train_predict=scaler,inverse_transform(train_predict)
-Y_train=scaler,inverse_transform([Y_train])
-test_predict=scaler,inverse_transform(test_predict)
-Y_test=scaler,inverse_transform([Y_test])
+train_predict=scaler.inverse_transform(train_predict)
+Y_train=scaler.inverse_transform([Y_train])
+test_predict=scaler.inverse_transform(test_predict)
+Y_test=scaler.inverse_transform([Y_test])
 print('Train Mean Absolute Error:', mean_absolute_error(Y_train[0],train_predict[:,0]))
 print('Train Root Mean Squared Error:', np.sqrt(mean_squared_error(Y_train[0],train_predict[:,0])))
 print('Test Mean Absolute Error:', mean_absolute_error(Y_test[0],test_predict[:,0]))
@@ -90,7 +90,7 @@ df['Date'] = pd.to_datetime(df['Date'])
 df.set_axis(df['Date'], inplace=True)
 df.drop(columns=['Max_Temp'], inplace=True)
 close_data = df['Min_Temp'].values
-close_data = close_data,reshape((-1,1))
+close_data = close_data.reshape((-1,1))
 split_percent = 0.80
 split = int(split_percent*len(close_data))
 close_test = close_data[split:]
@@ -100,9 +100,9 @@ train,test=dataset[0:train_size,:],dataset[train_size:len(dataset),:]
 look_back = 1
 test_generator = TimeseriesGenerator(close_test, close_test, length=look_back, batch_size=1)
 prediction = model.predict_generator(test_generator)
-close_test = close_test,reshape((-1))
-prediction = prediction,reshape((-1))
-close_data = close_data,reshape((-1))
+close_test = close_test.reshape((-1))
+prediction = prediction.reshape((-1))
+close_data = close_data.reshape((-1))
 def predict(num_prediction, model):
     prediction_list = close_data[-look_back:]
     for _ in range(num_prediction):
@@ -115,5 +115,7 @@ def predict(num_prediction, model):
 def num_prediction = 3
     forecast = predict(num_prediction, model)
     forecast_dates = predict_dates(num_prediction)
-    value=forecast,reshape((len(forecast),1))
-    inversed=scaler,inverse_transform (value)
+    value=forecast.reshape((len(forecast),1))
+    inversed=scaler.inverse_transform (value)
+    return inversed
+
